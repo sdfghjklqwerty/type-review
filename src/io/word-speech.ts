@@ -144,7 +144,7 @@ export function createWordSpeaker(options: WordSpeakerOptions = {}): WordSpeaker
         waiting = null;
         publish(
           "no-voice",
-          "No local English voice. Install an English speech voice in Windows settings, then reload.",
+          "No local English voice. Install an English speech voice in Windows settings. If already installed, fully restart the browser.",
         );
       } else {
         publish("loading", "Loading local English voices…");

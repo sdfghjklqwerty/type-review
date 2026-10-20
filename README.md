@@ -28,7 +28,8 @@ Open **settings → sound → word pronunciation** to toggle **read completed wo
 aloud** or click **test voice**. The toggle is remembered in this browser. Speech
 uses an installed local English voice through the browser's speech synthesis;
 there is no speech account, API key, remote voice fallback, or new server.
-If no local English voice is available, install one in Windows settings and reload.
+If no local English voice is available, install one in Windows settings. Fully
+restart the browser if it still lists only the voices available before installation.
 The settings page displays the selected voice or a recovery message. Offline
 availability depends on the installed voice and should be tested on the device.
 

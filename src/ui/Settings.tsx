@@ -6,6 +6,7 @@ import { KEY_SOUND_PACKS } from "../io";
 import type { KeyboardLayoutName } from "./components/keyboard-layouts";
 import type { KeyMap } from "./components/keymaps";
 import { RadioGroup } from "./components/RadioGroup";
+import type { WordSpeechControl } from "./hooks/use-word-speech";
 import type { Theme } from "./theme";
 
 const WORD_COUNTS = [10, 25, 30, 50] as const;
@@ -76,6 +77,8 @@ export interface SettingsProps {
   /** Master volume 0..1. Applies immediately. */
   keySoundVolume: number;
   onKeySoundVolumeChange: (value: number) => void;
+  /** Local English pronunciation preference, independent of keyboard sounds. */
+  wordSpeech?: WordSpeechControl;
   /** Whether the typing area renders faint markers for invisible chars. */
   showWhitespace: boolean;
   onShowWhitespaceChange: (next: boolean) => void;
@@ -473,6 +476,39 @@ export function Settings(props: SettingsProps): JSX.Element {
 
           <Show when={activeTab() === "sound"}>
             <section aria-label="sound">
+              <Show when={props.wordSpeech}>
+                {(speech) => (
+                  <fieldset class="subsection" aria-labelledby="sub-word-speech">
+                    <h3 id="sub-word-speech" class="label">
+                      word pronunciation
+                    </h3>
+                    <label class="toggle">
+                      <input
+                        type="checkbox"
+                        checked={speech().enabled()}
+                        onChange={(event) => speech().setEnabled(event.currentTarget.checked)}
+                      />
+                      <span>read completed words aloud</span>
+                    </label>
+                    <p class="field__hint">
+                      Read each correctly typed English word after a space, punctuation, or the end
+                      of the passage. Uses a local voice. Fast typing keeps only the latest waiting
+                      word.
+                    </p>
+                    <p class="field__hint" role="status">
+                      {speech().state().message}
+                    </p>
+                    <button
+                      type="button"
+                      class="btn"
+                      onClick={() => speech().preview()}
+                      disabled={!speech().enabled() || !speech().state().available}
+                    >
+                      test voice
+                    </button>
+                  </fieldset>
+                )}
+              </Show>
               <div class="field">
                 <span id="lbl-sound-pack" class="field__label">
                   pack

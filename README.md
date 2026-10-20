@@ -17,6 +17,26 @@ A typing-practice web app that **adapts to you** and **stays out of your way** �
 - **Four themes** — dark, light, sepia, high-contrast. sRGB fallbacks for pre-2023 browsers.
 - **Your data, on your device** — IndexedDB, no account. One click exports a JSON backup; one click wipes it.
 
+## Word pronunciation in this fork
+
+English word pronunciation is enabled by default. A correctly typed word is read
+after its space or punctuation; the final word is read when the passage ends.
+Contractions and hyphenated words stay together. Retyping an already-read word
+at the same position is silent; repeated words elsewhere are read separately.
+
+Open **settings → sound → word pronunciation** to toggle **read completed words
+aloud** or click **test voice**. The toggle is remembered in this browser. Speech
+uses an installed local English voice through the browser's speech synthesis;
+there is no speech account, API key, remote voice fallback, or new server.
+If no local English voice is available, install one in Windows settings and reload.
+The settings page displays the selected voice or a recovery message. Offline
+availability depends on the installed voice and should be tested on the device.
+
+Typing stays independent of audio playback. The current word finishes and only
+the latest waiting word is retained during fast typing. Starting a fresh run,
+leaving practice/results, or disabling pronunciation clears pending speech.
+Keyboard sound pack and volume controls remain independent of pronunciation.
+
 ## Try it
 
 [type.review](https://type.review) — it's a single page that loads, no sign-up, and starts working.
@@ -94,7 +114,7 @@ For Apache / Nginx / S3+CloudFront, translate the same policy to your host. Subr
 |---|---|---|
 | Package name | `type-review` | `package.json` |
 | IndexedDB database | `type-review` (v2) | object stores: `profile`, `user-corpus` |
-| localStorage keys | `type-review:theme`, `type-review:has-saved-profile`, `type-review:show-keyboard`, `type-review:keyboard-layout`, `type-review:sound-pack`, `type-review:sound-volume`, `type-review:corpus-channel` | preferences only — no PII |
+| localStorage keys | `type-review:theme`, `type-review:has-saved-profile`, `type-review:show-keyboard`, `type-review:keyboard-layout`, `type-review:sound-pack`, `type-review:sound-volume`, `type-review:corpus-channel`, `type-review:word-speech` | preferences only — no PII |
 | BroadcastChannel | `type-review` | cross-tab "another tab saved" notification |
 | Console log prefix | `type-review: <stage> failed` | from `src/ui/log.ts` |
 

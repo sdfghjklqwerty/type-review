@@ -1,4 +1,5 @@
 import type { CharStatus, Feedback, Step, TypingSnapshot } from "./types";
+import { WordCompletion } from "./word-completion";
 
 /**
  * Pause cap (ms): a gap larger than this between two keystrokes is treated as
@@ -11,6 +12,8 @@ import type { CharStatus, Feedback, Step, TypingSnapshot } from "./types";
 export const PAUSE_CAP_MS = 12_000;
 
 export interface TextInputOptions {
+  /** Optional boundary feedback; never called for incomplete or incorrect words. */
+  onWord?: (word: string) => void;
   /**
    * When true, a mistyped character does not advance the cursor — the user must
    * type the correct character to proceed. When false (default), the cursor
@@ -36,6 +39,7 @@ export class TextInput {
   readonly expected: string;
   private readonly stopOnError: boolean;
   private readonly noBackspace: boolean;
+  private readonly wordCompletion: WordCompletion | undefined;
   private readonly _statuses: CharStatus[];
   private readonly _steps: Step[] = [];
   private _pos = 0;
@@ -57,6 +61,7 @@ export class TextInput {
     this.expected = expected;
     this.stopOnError = options.stopOnError ?? false;
     this.noBackspace = options.noBackspace ?? false;
+    this.wordCompletion = options.onWord ? new WordCompletion(expected, options.onWord) : undefined;
     this._statuses = new Array<CharStatus>(expected.length).fill("untyped");
     // Sanitize emits `\n\n` between paragraphs. They're not typeable from
     // a real keyboard via our input handler (Enter is reserved for "go
@@ -162,6 +167,7 @@ export class TextInput {
     this._statuses[this._pos] = typo ? "incorrect" : "correct";
     this._pos++;
     this._skipNonTypeable();
+    this.wordCompletion?.update(this._pos, this._statuses);
     return this.completed ? "completed" : "running";
   }
 
@@ -185,6 +191,7 @@ export class TextInput {
       this._pos--;
     }
     this._statuses[this._pos] = "untyped";
+    this.wordCompletion?.update(this._pos, this._statuses);
   }
 
   /** Restore the instance to its initial, untyped state. */
@@ -194,6 +201,7 @@ export class TextInput {
     this._pos = 0;
     this._lastTimeStamp = null;
     this._activeMs = 0;
+    this.wordCompletion?.reset();
     this._skipNonTypeable();
   }
 }

@@ -67,6 +67,7 @@ export interface PracticeStageProps {
    * the Session (no Library save) and restarts the run.
    */
   onCustomText: (text: string) => void;
+  wordSpeechNotice?: string;
 }
 
 /**
@@ -173,6 +174,11 @@ export function PracticeStage(props: PracticeStageProps): JSX.Element {
           </Show>
           <CustomTextInline onSubmit={props.onCustomText} />
         </div>
+        <Show when={props.wordSpeechNotice}>
+          <p class="field__hint" role="status">
+            {props.wordSpeechNotice}
+          </p>
+        </Show>
       </div>
     </main>
   );

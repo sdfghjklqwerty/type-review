@@ -17,6 +17,8 @@ export interface InputHandlerCallbacks {
 }
 
 export interface InputHandlerOptions {
+  /** Hidden typing input is allowed; other editable controls keep their own keys. */
+  captureTarget?: () => EventTarget | undefined;
   /**
    * Gates the typing actions (char / backspace / restart). When it returns
    * false the handler ignores those keystrokes entirely — no callback, no
@@ -80,6 +82,13 @@ export function attachInputHandler(
     if (event.ctrlKey || event.metaKey || event.altKey) {
       return;
     }
+    const target = event.target;
+    if (
+      target !== options.captureTarget?.() &&
+      target instanceof Element &&
+      target.closest("input, textarea, select, [contenteditable]:not([contenteditable='false'])")
+    )
+      return;
     // IME / dead-key composition: every keydown during composition fires with
     // the pre-composed key; committing it would suppress the actual character.
     if (event.isComposing || event.keyCode === 229) {

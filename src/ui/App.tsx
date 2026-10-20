@@ -1,5 +1,5 @@
 import type { JSX } from "solid-js";
-import { createMemo, createSignal, onCleanup, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, onCleanup, Show } from "solid-js";
 import type { CorpusEntry } from "../engine/corpus";
 import type { ProfileSettings, Session } from "../engine/session";
 import type { ProfileStore } from "../io";
@@ -39,6 +39,7 @@ import { createSessionHandlers } from "./hooks/use-session-handlers";
 import { createShowWhitespace } from "./hooks/use-show-whitespace";
 import { createSnapshotView } from "./hooks/use-snapshot";
 import { createUserCorpus } from "./hooks/use-user-corpus";
+import { createWordSpeech } from "./hooks/use-word-speech";
 import { Library } from "./Library";
 import { logFailure } from "./log";
 import { MacApp } from "./MacApp";
@@ -88,6 +89,12 @@ export function App(props: AppProps = {}): JSX.Element {
   const keyBus = createKeyEventBus();
   const pressedKeys = createPressedKeys(keyBus);
   const keySounds = createKeySounds(keyBus);
+  const wordSpeech = createWordSpeech();
+  createEffect(() => {
+    const name = router.route().name;
+    // Let the final word finish on Results. Other pages stop pending speech.
+    if (name !== "practice" && name !== "results") wordSpeech.cancel();
+  });
   onCleanup(() => keyBus.detach());
 
   // Corpus stack — composite of user / quote / code / difficult / drills
@@ -163,12 +170,14 @@ export function App(props: AppProps = {}): JSX.Element {
   };
 
   const goNext = (): void => {
+    wordSpeech.cancel();
     session.start();
     router.navigate("practice");
     view.syncNow();
   };
 
   const runCustomText = (text: string): void => {
+    wordSpeech.cancel();
     // Custom-text runs bypass the corpus adapter, which is where
     // `setCurrentEntry` is wired. Without an explicit clear, the
     // Results screen would still show attribution from whatever entry
@@ -186,6 +195,7 @@ export function App(props: AppProps = {}): JSX.Element {
     if (next === corpusChannel.channel()) return;
     corpusChannel.setChannel(next);
     if (is("practice")) {
+      wordSpeech.cancel();
       session.start();
       view.syncNow();
     }
@@ -198,6 +208,7 @@ export function App(props: AppProps = {}): JSX.Element {
       return;
     }
     session.updateSettings(validated);
+    wordSpeech.cancel();
     persist();
     // Settings is immediate-mode now — every control change calls this.
     // No navigation here; the user stays on the settings page until they
@@ -267,6 +278,7 @@ export function App(props: AppProps = {}): JSX.Element {
     view,
     router,
     setRunCrashed,
+    onRestart: wordSpeech.cancel,
   });
 
   createSessionBootstrap({
@@ -282,6 +294,7 @@ export function App(props: AppProps = {}): JSX.Element {
       view.attach(() => session.snapshot());
     },
     onResult: () => persist(),
+    onWord: wordSpeech.speak,
     input: {
       onChar: handleSessionInput,
       onBackspace: () => handleBackspace(),
@@ -292,6 +305,7 @@ export function App(props: AppProps = {}): JSX.Element {
       },
     },
     enabled: {
+      captureTarget: () => hiddenInputRef,
       isEnabled: () => is("practice") && !runCrashed(),
       shouldConfirm: () => is("results"),
     },
@@ -329,6 +343,11 @@ export function App(props: AppProps = {}): JSX.Element {
               onSoftKeyboardBackspace={handleBackspace}
               showWhitespace={showWhitespace.visible()}
               onCustomText={runCustomText}
+              wordSpeechNotice={
+                wordSpeech.enabled() && wordSpeech.state().kind !== "ready"
+                  ? wordSpeech.state().message
+                  : undefined
+              }
             />
           </Show>
 
@@ -389,6 +408,7 @@ export function App(props: AppProps = {}): JSX.Element {
                 onKeySoundPackChange={keySounds.setPackName}
                 keySoundVolume={keySounds.volume()}
                 onKeySoundVolumeChange={keySounds.setVolume}
+                wordSpeech={wordSpeech}
                 showWhitespace={showWhitespace.visible()}
                 onShowWhitespaceChange={showWhitespace.setVisible}
                 onSave={applySettings}

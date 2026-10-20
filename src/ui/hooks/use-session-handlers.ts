@@ -11,6 +11,7 @@ export interface SessionHandlersDeps {
   view: { sync: () => void; syncNow: () => void };
   router: Pick<Router, "navigate">;
   setRunCrashed: (v: boolean) => void;
+  onRestart?: () => void;
 }
 
 export interface SessionHandlers {
@@ -58,6 +59,7 @@ export function createSessionHandlers(deps: SessionHandlersDeps): SessionHandler
         deps.view.sync();
       }),
     onRestart: () => {
+      deps.onRestart?.();
       deps.getSession().start();
       deps.router.navigate(PRACTICE);
       deps.setRunCrashed(false);

@@ -81,6 +81,7 @@ export class Session {
     },
   ) => Passage;
   private readonly onResult: ((result: RunResult, profile: Profile) => void) | undefined;
+  private readonly onWord: ((word: string) => void) | undefined;
 
   private textInput: TextInput | null = null;
   private passage: Passage | null = null;
@@ -122,6 +123,7 @@ export class Session {
           includePunctuation: opts.includePunctuation,
         }));
     this.onResult = deps.onResult;
+    this.onWord = deps.onWord;
     this.start();
   }
 
@@ -171,7 +173,11 @@ export class Session {
             });
     }
 
-    this.textInput = new TextInput(this.passage.text, { stopOnError, noBackspace });
+    this.textInput = new TextInput(this.passage.text, {
+      stopOnError,
+      noBackspace,
+      onWord: this.onWord,
+    });
   }
 
   /** Restarts the current run with freshly sourced text. */
@@ -203,6 +209,7 @@ export class Session {
     // for one-off, untracked text.
     this.passage = makePassage(`custom:${this.now()}`, cleaned);
     this.textInput = new TextInput(cleaned, {
+      onWord: this.onWord,
       stopOnError: this._profile.settings.stopOnError,
       noBackspace: this._profile.settings.noBackspace,
     });

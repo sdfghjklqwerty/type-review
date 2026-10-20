@@ -49,6 +49,36 @@ function press(key: string, init: KeyboardEventInit = {}): KeyboardEvent {
 }
 
 describe("attachInputHandler", () => {
+  it("leaves editable fields alone, including custom-text editing during practice", () => {
+    const cb = callbacks();
+    handle = attach(cb, { isEnabled: () => true, shouldConfirm: () => true });
+    for (const tag of ["input", "textarea", "select", "div"]) {
+      const element = document.createElement(tag);
+      if (tag === "div") element.setAttribute("contenteditable", "true");
+      document.body.appendChild(element);
+      for (const key of ["a", " ", "Backspace", "Tab", "Enter"]) {
+        const event = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+        element.dispatchEvent(event);
+        expect(event.defaultPrevented).toBe(false);
+      }
+      element.remove();
+    }
+    expect(cb.onChar).not.toHaveBeenCalled();
+    expect(cb.onRestart).not.toHaveBeenCalled();
+    expect(cb.onConfirm).not.toHaveBeenCalled();
+  });
+
+  it("accepts physical keystrokes from the designated typing capture input", () => {
+    const cb = callbacks();
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    handle = attach(cb, { captureTarget: () => input, clock: () => 42 });
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "a", bubbles: true, cancelable: true }),
+    );
+    expect(cb.onChar).toHaveBeenCalledWith("a", 42);
+    input.remove();
+  });
   it("reports printable characters with a timestamp from the injected clock", () => {
     const cb = callbacks();
     handle = attach(cb, { clock: () => 42 });

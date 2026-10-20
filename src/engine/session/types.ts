@@ -98,6 +98,8 @@ export interface SessionSnapshot {
 }
 
 export interface SessionDeps {
+  /** Correctly completed word feedback, independent of the browser speech adapter. */
+  onWord?: (word: string) => void;
   /**
    * Adaptive text source: given a Filter, the run's word count and the
    * preferred passage length, returns a Passage. `passageLength` lets

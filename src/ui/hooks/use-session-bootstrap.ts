@@ -34,6 +34,8 @@ export interface SessionBootstrapOptions {
   onReady: (deps: { session: Session; store: ProfileStore }) => void;
   /** Forwarded to the constructed `Session` — fires when a run completes. */
   onResult: (profile: Profile) => void;
+  /** Optional browser feedback for correctly completed words. */
+  onWord?: (word: string) => void;
   /** Optional adaptive text source. Defaults to Session's built-in pseudo-words. */
   adaptiveSource?: (
     filter: Filter,
@@ -53,7 +55,8 @@ export interface SessionBootstrapOptions {
   /** Keystroke handlers wired through `attachInputHandler`. */
   input: InputHandlerCallbacks;
   /** Gates passed to `attachInputHandler`. */
-  enabled: Required<Pick<InputHandlerOptions, "isEnabled" | "shouldConfirm">>;
+  enabled: Required<Pick<InputHandlerOptions, "isEnabled" | "shouldConfirm">> &
+    Pick<InputHandlerOptions, "captureTarget">;
 }
 
 /**
@@ -123,6 +126,7 @@ export function createSessionBootstrap(opts: SessionBootstrapOptions): void {
       }
 
       const session = new Session(initialProfile, {
+        onWord: opts.onWord,
         onResult: () => opts.onResult(session.profile),
         ...(opts.adaptiveSource ? { adaptiveSource: opts.adaptiveSource } : {}),
         ...(opts.benchmarkSource ? { benchmarkSource: opts.benchmarkSource } : {}),
